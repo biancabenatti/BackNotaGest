@@ -1,83 +1,98 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const path = require('path');
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+
+// 👉 URL correta do microserviço (Auth Service)
+const AUTH_SERVICE_URL =
+  process.env.AUTH_SERVICE_URL || 'https://micronotagest.onrender.com';
 
 const swaggerOptions = {
-  swaggerDefinition: {
+  definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Backend Principal - NotaGest',
+      title: 'Auth Service - NotaGest',
       version: '1.0.0',
-      description: 'Backend principal da aplicação NotaGest, responsável por usuários, uploads e gerenciamento de imóveis.',
-      contact: { name: 'Equipe NotaGest', email: 'contato@notagest.com' },
+      description: 'Microserviço responsável pelo registro e login de usuários com JWT.',
     },
+
+    // 👉 Swagger só precisa apontar para o Auth Service (este micro)
     servers: [
-      { 
-        url: process.env.BACKEND_URL || `http://localhost:${PORT}`, 
-        description: 'Servidor da API NotaGest'
-      }
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
+      {
+        url: AUTH_SERVICE_URL,
+        description: 'Servidor Auth Service',
       },
+    ],
+
+    components: {
       schemas: {
-        User: {
+        RegisterInput: {
           type: 'object',
           properties: {
-            _id: { type: 'string', example: '671a9a2239fbd101bf4d3cc5' },
-            name: { type: 'string', example: 'Ana Laura' },
-            email: { type: 'string', example: 'ana@example.com' },
-            createdAt: { type: 'string', example: '2025-10-20T12:00:00Z' },
-          }
+            nome: { type: 'string', example: 'Bianca' },
+            email: { type: 'string', example: 'usuario@email.com' },
+            senha: { type: 'string', example: 'senha123' },
+          },
+          required: ['nome', 'email', 'senha'],
         },
-        Arquivo: {
+        RegisterSuccess: {
           type: 'object',
           properties: {
-            _id: { type: 'string', example: '671a9b5d39fbd101bf4d3cc7' },
-            user: { type: 'string', example: '671a9a2239fbd101bf4d3cc5' },
-            title: { type: 'string', example: 'Nota fiscal de cimento' },
-            value: { type: 'number', example: 350.5 },
-            purchaseDate: { type: 'string', example: '2025-09-01' },
-            property: { type: 'string', example: 'Obra da Casa Nova' },
-            category: { type: 'string', example: 'Materiais' },
-            subcategory: { type: 'string', example: 'Construção' },
-            observation: { type: 'string', example: 'Compra feita na loja ConstruMais' },
-            filePath: { type: 'string', example: '/uploads/1718205958340-nota-cimento.pdf' },
-          }
+            message: { type: 'string', example: 'Usuário registrado com sucesso!' },
+            user: {
+              type: 'object',
+              example: {
+                id: '672ffb1b2ac87031aaf4889c',
+                nome: 'Bianca',
+                email: 'usuario@email.com'
+              }
+            },
+            token: { type: 'string', example: 'jwt_aqui' },
+          },
         },
-        Imovel: {
+        LoginInput: {
           type: 'object',
           properties: {
-            _id: { type: 'string', example: '671a9cdd39fbd101bf4d3cca' },
-            nome: { type: 'string', example: 'Casa Nova' },
-            cep: { type: 'string', example: '18040-300' },
-            rua: { type: 'string', example: 'Rua das Palmeiras' },
-            numero: { type: 'string', example: '123' },
-            bairro: { type: 'string', example: 'Centro' },
-            cidade: { type: 'string', example: 'Sorocaba' },
-            estado: { type: 'string', example: 'SP' },
-            tipo: { type: 'string', example: 'Residencial' },
-          }
+            email: { type: 'string', example: 'usuario@email.com' },
+            senha: { type: 'string', example: 'senha123' },
+          },
+          required: ['email', 'senha'],
+        },
+        LoginSuccess: {
+          type: 'object',
+          properties: {
+            message: { type: 'string', example: 'Login realizado com sucesso!' },
+            user: {
+              type: 'object',
+              example: {
+                id: '672ffb1b2ac87031aaf4889c',
+                nome: 'Bianca',
+                email: 'usuario@email.com'
+              }
+            },
+            token: { type: 'string', example: 'jwt_aqui' },
+          },
         },
         ErrorResponse: {
           type: 'object',
           properties: {
-            error: { type: 'string', example: 'Mensagem de erro' }
-          }
-        }
-      }
-    }
+            error: { type: 'string', example: 'Mensagem de erro.' },
+          },
+        },
+      },
+    },
   },
-  apis: ['./../docs/swaggerPaths.js', './routes/**/*.js'] 
+
+  // 👉 Importa os comentários das rotas
+  apis: [path.join(__dirname, '../routes/authRoutes.js')],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 const setupSwagger = (app) => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  console.log(`📘 Swagger rodando em http://localhost:${PORT}/api-docs`);
+  console.log(`📘 Swagger rodando em: ${AUTH_SERVICE_URL}/api-docs`);
 };
 
 module.exports = setupSwagger;
