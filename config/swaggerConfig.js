@@ -10,21 +10,17 @@ const swaggerOptions = {
       title: 'Backend Principal - NotaGest',
       version: '1.0.0',
       description: 'Backend principal da aplicação NotaGest, responsável por usuários, uploads e gerenciamento de imóveis.',
-      contact: {
-        name: 'Equipe NotaGest',
-        email: 'contato@notagest.com',
-      },
+      contact: { name: 'Equipe NotaGest', email: 'contato@notagest.com' },
     },
     servers: [
-      { url: `http://localhost:${PORT}`, description: 'Servidor local do backend principal' }
+      { 
+        url: process.env.BACKEND_URL || `http://localhost:${PORT}`, 
+        description: 'Servidor da API NotaGest'
+      }
     ],
     components: {
       securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        }
+        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
       },
       schemas: {
         User: {
